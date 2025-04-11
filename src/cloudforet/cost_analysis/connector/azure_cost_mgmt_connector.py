@@ -39,9 +39,14 @@ def azure_exception_handler(func):
         return_type = get_type_hints(func).get("return")
         try:
             return func(*args, **kwargs)
-        except ServiceResponseError as error:
-            _print_error_log(error)
-            time.sleep(10)
+        except ServiceResponseError as e:
+            retry_count = kwargs.get("retry_count", 0)
+            if retry_count <= 0:
+                _print_error_log(e)
+                raise e
+
+            _print_error_log(e)
+            time.sleep(60)
             return func(*args, **kwargs)
 
         except ResourceNotFoundError as error:
@@ -227,7 +232,9 @@ class AzureCostMgmtConnector(BaseConnector):
         return billing_account_agreement_type
 
     @azure_exception_handler
-    def begin_create_operation(self, scope: str, parameters: dict) -> list:
+    def begin_create_operation(
+        self, scope: str, parameters: dict, retry_count: int = 2
+    ) -> list:
         content_type = "application/json"
         response = (
             self.cost_mgmt_client.generate_cost_details_report.begin_create_operation(

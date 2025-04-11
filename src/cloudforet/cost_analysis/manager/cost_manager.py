@@ -612,7 +612,10 @@ class CostManager(BaseManager):
                     break
 
         except Exception as e:
-            _LOGGER.error(f"[_get_unit_price_from_meter_id] get unit price error: {e}")
+            _LOGGER.error(
+                f"[_get_unit_price_from_meter_id] get unit price error: {e}, meter_id= {meter_id}, product_id: {product_id}",
+                exc_info=True,
+            )
         return unit_price
 
     @staticmethod
